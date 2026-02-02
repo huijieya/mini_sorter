@@ -1,0 +1,5 @@
+{
+  "name": "mini sorter",
+  "description": "A high-performance industrial desktop sorting interface for logistics, featuring multi-wall management, real-time status tracking, and seamless WebView2 backend integration.",
+  "requestFramePermissions": []
+}
