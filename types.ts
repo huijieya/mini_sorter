@@ -27,6 +27,7 @@ export interface Wall {
 export interface HardwareStatus {
   cameraConnected: boolean;
   networkConnected: boolean;
+  wesConnected: boolean;
 }
 
 export interface OrderInfo {

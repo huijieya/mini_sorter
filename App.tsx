@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SlotStatus, SortingMode, Wall, OrderInfo, HardwareStatus, BackendResponse } from './types';
 import { callBackend, listenFromBackend } from './services/bridge';
 import Header from './components/Header';
@@ -11,25 +11,23 @@ import SettingsOverlay from './components/SettingsOverlay';
 const App: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [sortingMode, setSortingMode] = useState<SortingMode>('single');
-  const [feedback, setFeedback] = useState<{ text: string; type: 'info' | 'success' | 'error' }>({
-    text: '等待扫码...',
-    type: 'info'
-  });
   
   // 硬件状态
   const [hwStatus, setHwStatus] = useState<HardwareStatus>({
-    cameraConnected: false, // 默认设为false以便测试光标聚焦逻辑
-    networkConnected: true
+    cameraConnected: true,
+    networkConnected: true,
+    wesConnected: true
   });
 
-  // 墙面数据
+  // 墙面数据 - 初始状态部分设为在线用于演示
   const [walls, setWalls] = useState<Wall[]>([
     { 
       id: 'w1', name: 'Wall001', online: true, 
       slots: Array.from({ length: 20 }, (_, i) => ({ 
         id: `A${i+1}`, label: `A${i+1}`,
-        status: SlotStatus.CLOSED,
-        count: 0
+        status: i === 0 ? SlotStatus.OPEN : (i === 7 ? SlotStatus.FULL : (i === 8 ? SlotStatus.IN_PROGRESS : (i === 11 ? SlotStatus.FINISHED : SlotStatus.CLOSED))),
+        // Fix: Removed duplicate 'count' property from line 27 and consolidated logic here.
+        count: i === 11 ? 16 : (i === 0 ? 10 : 0)
       })) 
     },
     { 
@@ -41,93 +39,86 @@ const App: React.FC = () => {
       slots: Array.from({ length: 20 }, (_, i) => ({ id: `B${i+1}`, label: `B${i+1}`, count: 0, status: SlotStatus.CLOSED })) 
     },
     { 
-      id: 'w4', name: 'Wall004', online: false, 
+      id: 'w4', name: 'Wall004', online: false, // 默认离线，显示新样式
       slots: Array.from({ length: 20 }, (_, i) => ({ id: `D${i+1}`, label: `D${i+1}`, count: 0, status: SlotStatus.CLOSED })) 
     },
   ]);
 
+  // 物料订单数据
   const [order, setOrder] = useState<OrderInfo>({
-    orderId: '-',
-    barcode: '-',
-    name: '请扫码开始',
-    required: 0,
-    actual: 0
+    orderId: 'OD20251234',
+    barcode: 'SN20259901',
+    name: '某XL女式T恤',
+    required: 10,
+    actual: 5,
+    imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=400'
   });
-
-  // 处理发车逻辑
-  const handleDispatch = useCallback(() => {
-    callBackend('DISPATCH_CONFIRM', { 
-      orderId: order.orderId, 
-      barcode: order.barcode, 
-      actual: order.actual 
-    });
-    setFeedback({ text: '发车成功！', type: 'success' });
-    
-    // 3秒后恢复默认反馈
-    setTimeout(() => {
-      setFeedback({ text: '等待扫码...', type: 'info' });
-    }, 3000);
-  }, [order]);
-
-  // 处理扫码输入
-  const handleManualScan = (barcode: string) => {
-    setFeedback({ text: '正在查询: ' + barcode, type: 'info' });
-    callBackend('MANUAL_SCAN', { barcode });
-  };
 
   // 接收后端指令
   useEffect(() => {
     listenFromBackend((key, res: BackendResponse) => {
       if (res.code !== 0) {
-        setFeedback({ text: res.message || '操作失败', type: 'error' });
+        console.error(`Backend Error [${key}]: ${res.message}`);
         return;
       }
 
       const { data } = res;
+
       switch (key) {
         case 'STATUS_SYNC':
           if (data.hardware) setHwStatus(data.hardware);
+          if (data.walls) {
+             setWalls(prev => prev.map(w => {
+               const update = data.walls.find((uw: any) => uw.id === w.id);
+               return update ? { ...w, online: update.online } : w;
+             }));
+          }
           break;
 
         case 'SCAN_RESULT':
           setOrder(data.order);
-          setFeedback({ text: '识别成功: ' + data.order.barcode, type: 'success' });
-          
-          // 更新墙面亮灯
           if (data.target) {
-            const { wallId, slotId } = data.target;
-            setWalls(prev => prev.map(w => w.id === wallId ? {
-              ...w,
-              slots: w.slots.map(s => s.id === slotId ? { ...s, status: SlotStatus.OPEN } : s)
-            } : w));
-          }
-
-          // 单件模式逻辑：自动发车
-          if (sortingMode === 'single') {
-            setTimeout(() => {
-              handleDispatch();
-            }, 500); // 略微延迟增加视觉反馈感
+            const { wallId, slotId, status } = data.target;
+            setWalls(prev => prev.map(w => {
+              if (w.id === wallId) {
+                return {
+                  ...w,
+                  slots: w.slots.map(s => s.id === slotId ? { ...s, status: status || SlotStatus.OPEN } : s)
+                };
+              }
+              return w;
+            }));
           }
           break;
 
         case 'WALL_UPDATE':
-          setWalls(prev => prev.map(w => w.id === data.wallId ? {
-            ...w,
-            slots: w.slots.map(s => s.id === data.slotId ? { ...s, count: data.count, status: data.status || s.status } : s)
-          } : w));
+          setWalls(prev => prev.map(w => {
+            if (w.id === data.wallId) {
+              return {
+                ...w,
+                slots: w.slots.map(s => s.id === data.slotId ? { ...s, count: data.count, status: data.status || s.status } : s)
+              };
+            }
+            return w;
+          }));
+          break;
+          
+        case 'INIT_CONFIG':
+          if (data.walls) setWalls(data.walls);
+          if (data.order) setOrder(data.order);
           break;
       }
     });
 
     callBackend('INIT_REQUEST', {});
-  }, [sortingMode, handleDispatch]);
+  }, []);
 
   const handleSlotClick = (wallId: string, slotId: string) => {
     callBackend('SLOT_CLICK', { wallId, slotId });
   };
 
   const handleUpdateActual = (val: number) => {
-    setOrder(prev => ({ ...prev, actual: val }));
+    callBackend('UPDATE_COUNT', { barcode: order.barcode, newActual: val });
   };
 
   return (
@@ -138,30 +129,30 @@ const App: React.FC = () => {
         <StatusBar status={hwStatus} />
 
         <div className="flex-1 flex gap-2.5 min-h-0 overflow-hidden">
+          {/* 左侧两面墙 */}
           <div className="flex flex-col gap-2.5 w-[28%] h-full overflow-hidden">
             <WallGrid wall={walls[0]} onSlotClick={(id) => handleSlotClick(walls[0].id, id)} className="flex-1" />
             <WallGrid wall={walls[2]} onSlotClick={(id) => handleSlotClick(walls[2].id, id)} className="flex-1" />
           </div>
 
-          <div className="flex-1 min-w-[340px]">
+          {/* 中央控制面板 */}
+          <div className="flex-1 min-w-[340px] shadow-[0_0_40px_rgba(34,211,238,0.05)]">
             <ControlPanel 
               order={order} 
               mode={sortingMode} 
-              feedback={feedback}
-              cameraOnline={hwStatus.cameraConnected}
               onToggleMode={(m) => setSortingMode(m)}
               onUpdateActual={handleUpdateActual}
-              onDispatch={handleDispatch}
-              onManualScan={handleManualScan}
             />
           </div>
 
+          {/* 右侧两面墙 */}
           <div className="flex flex-col gap-2.5 w-[28%] h-full overflow-hidden">
             <WallGrid wall={walls[1]} onSlotClick={(id) => handleSlotClick(walls[1].id, id)} className="flex-1" />
             <WallGrid wall={walls[3]} onSlotClick={(id) => handleSlotClick(walls[3].id, id)} className="flex-1" />
           </div>
         </div>
 
+        {/* 状态图例 */}
         <div className="flex items-center gap-5 text-[9px] text-gray-400 bg-black/40 px-2.5 py-1 rounded-md border border-white/5 self-start mb-1">
           <span className="font-bold uppercase opacity-60">隔口状态:</span>
           <div className="flex items-center gap-3.5">
@@ -173,6 +164,10 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
+
+      <div className="px-4 py-0.5 flex justify-end">
+        <h2 className="text-[10px] font-black italic tracking-tighter text-white/10 select-none">HYPERLEAP TECHNOLOGY</h2>
+      </div>
 
       {showSettings && <SettingsOverlay onClose={() => setShowSettings(false)} />}
     </div>

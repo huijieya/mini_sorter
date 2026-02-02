@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { User, Camera, Cpu } from 'lucide-react';
+import { User, Camera, Cpu, Monitor } from 'lucide-react';
 import { HardwareStatus } from '../types';
 
 interface StatusBarProps {
@@ -28,6 +28,10 @@ const StatusBar: React.FC<StatusBarProps> = ({ status }) => {
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] font-bold text-gray-500 uppercase">Device</span>
           <Cpu size={14} className={status.networkConnected ? "text-green-500" : "text-red-500 opacity-50"} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-bold text-gray-500 uppercase">Wes</span>
+          <Monitor size={14} className={status.wesConnected ? "text-green-500" : "text-red-500 opacity-50"} />
         </div>
       </div>
     </div>
