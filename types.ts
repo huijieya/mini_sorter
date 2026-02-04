@@ -7,7 +7,6 @@ export enum SlotStatus {
   FINISHED = 'finished'
 }
 
-// Fix: Added missing SortingMode type export to resolve 'has no exported member' errors
 export type SortingMode = 'single' | 'multi';
 
 export interface Slot {
@@ -20,13 +19,13 @@ export interface Slot {
 export interface Wall {
   id: string;
   name: string;
-  online: boolean; // 新增：是否在线
+  online: boolean;
   slots: Slot[];
 }
 
 export interface HardwareStatus {
   cameraConnected: boolean;
-  networkConnected: boolean;
+  deviceConnected: boolean;
   wesConnected: boolean;
 }
 
@@ -36,7 +35,11 @@ export interface OrderInfo {
   name: string;
   required: number;
   actual: number;
-  imageUrl?: string;
+}
+
+export interface FeedbackMessage {
+  text: string;
+  type: 'info' | 'success' | 'error';
 }
 
 export interface BackendResponse<T = any> {
@@ -53,7 +56,6 @@ declare global {
         addEventListener: (type: string, listener: (event: any) => void) => void;
       };
     };
-    // 前端调用的后端方法
     onCSharpResponse?: (key: string, params: any) => void;
   }
 }

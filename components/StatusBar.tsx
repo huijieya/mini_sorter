@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { User, Camera, Cpu, Monitor } from 'lucide-react';
+import { User, Video, LayoutGrid, Monitor } from 'lucide-react';
 import { HardwareStatus } from '../types';
 
 interface StatusBarProps {
@@ -9,29 +8,26 @@ interface StatusBarProps {
 
 const StatusBar: React.FC<StatusBarProps> = ({ status }) => {
   return (
-    <div className="bg-[#1f1f1f] rounded-lg py-1.5 px-4 flex items-center justify-between border border-white/5 shadow-md">
-      <div className="flex items-center gap-2.5">
-        <div className="w-7 h-7 bg-cyan-500/15 rounded-full flex items-center justify-center border border-cyan-500/20">
-          <User className="text-cyan-400" size={14} />
+    <div className="flex items-center justify-between px-2 py-1">
+      <div className="flex items-center gap-2">
+        <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center text-black">
+          <User size={14} fill="currentColor" />
         </div>
-        <div className="flex flex-col">
-          <span className="text-[8px] text-gray-500 uppercase font-black tracking-tighter leading-none mb-0.5">Operator</span>
-          <span className="text-xs font-bold text-gray-200">Hyper001</span>
-        </div>
+        <span className="text-xs font-bold text-gray-300">Hyper001</span>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-5">
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold text-gray-500 uppercase">Camera</span>
-          <Camera size={14} className={status.cameraConnected ? "text-green-500" : "text-red-500 opacity-50"} />
+          <span className="text-[10px] uppercase font-bold text-gray-500">相机</span>
+          <Video className={status.cameraConnected ? "text-[#64C84C]" : "text-red-500"} size={16} fill="currentColor" />
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold text-gray-500 uppercase">Device</span>
-          <Cpu size={14} className={status.networkConnected ? "text-green-500" : "text-red-500 opacity-50"} />
+          <span className="text-[10px] uppercase font-bold text-gray-500">设备</span>
+          <LayoutGrid className={status.deviceConnected ? "text-[#64C84C]" : "text-red-500"} size={16} fill="currentColor" />
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold text-gray-500 uppercase">Wes</span>
-          <Monitor size={14} className={status.wesConnected ? "text-green-500" : "text-red-500 opacity-50"} />
+          <span className="text-[10px] uppercase font-bold text-gray-500">WES</span>
+          <Monitor className={status.wesConnected ? "text-[#64C84C]" : "text-red-500"} size={16} fill="currentColor" />
         </div>
       </div>
     </div>

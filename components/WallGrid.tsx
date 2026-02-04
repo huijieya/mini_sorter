@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Wall, SlotStatus } from '../types';
 
@@ -9,42 +8,39 @@ interface WallGridProps {
 }
 
 const WallGrid: React.FC<WallGridProps> = ({ wall, onSlotClick, className = "" }) => {
-  const getStatusColor = (status: SlotStatus) => {
+  const getStatusStyle = (status: SlotStatus) => {
     switch (status) {
-      case SlotStatus.OPEN: return 'bg-[#64C84C] text-black border-none shadow-[0_0_10px_rgba(100,200,76,0.3)]';
-      case SlotStatus.IN_PROGRESS: return 'bg-[#F59E0B] text-black border-none';
-      case SlotStatus.FULL: return 'bg-[#FACC15] text-black border-none';
+      case SlotStatus.OPEN: return 'bg-[#64C84C] text-black border-none shadow-[0_0_6px_rgba(100,200,76,0.2)]';
+      case SlotStatus.IN_PROGRESS: return 'bg-[#f88133] text-black border-none';
+      case SlotStatus.FULL: return 'bg-[#ffc634] text-black border-none';
       case SlotStatus.FINISHED: return 'bg-[#22D3EE] text-black border-none';
-      default: return 'bg-gray-700/20 text-gray-500 border-gray-600/30';
+      default: return 'bg-[#2a2a2a] text-gray-600 border-white/5';
     }
   };
 
-  // 如果分拨墙在线，显示正常的 20 格料框
   if (wall.online) {
     return (
-      <div className={`bg-[#1a1a1a] rounded-xl p-2.5 border border-white/5 flex flex-col overflow-hidden shadow-2xl ${className}`}>
-        <div className="flex items-center justify-between mb-1.5 px-1">
-          <span className="text-[10px] font-black text-gray-400 tracking-tight uppercase">墙号：{wall.name}</span>
+      <div className={`flex flex-col ${className}`}>
+        <div className="mb-0.5 px-1">
+          <span className="text-[8px] font-black text-gray-600 uppercase tracking-[0.2em]">Wall: {wall.name}</span>
         </div>
         
-        <div className="grid grid-cols-5 grid-rows-4 gap-1.5 flex-1 min-h-0">
+        <div className="grid grid-cols-5 grid-rows-4 gap-1 flex-1 border border-white/5 p-1 rounded-lg bg-black/20">
           {wall.slots.map((slot) => (
             <button
               key={slot.id}
               onClick={() => onSlotClick(slot.id)}
               className={`
-                w-full h-full rounded-md border flex flex-col items-center justify-center 
-                transition-all active:scale-95 text-[10px] font-black relative group
-                ${getStatusColor(slot.status)}
+                w-full h-full rounded-sm border flex flex-col items-center justify-center 
+                transition-all active:scale-90 text-[7px] font-black relative overflow-hidden
+                ${getStatusStyle(slot.status)}
               `}
             >
-              <span className="absolute top-1 left-1.5 text-[8px] opacity-40 group-hover:opacity-100">
+              <span className="absolute top-0.5 left-0.5 opacity-40 font-mono">
                 {slot.label}
               </span>
               {slot.count > 0 && (
-                <div className="flex flex-col items-center">
-                  <span className="text-lg leading-none font-black">{slot.count}</span>
-                </div>
+                <span className="text-sm font-black mt-1 leading-none">{slot.count}</span>
               )}
             </button>
           ))}
@@ -53,24 +49,13 @@ const WallGrid: React.FC<WallGridProps> = ({ wall, onSlotClick, className = "" }
     );
   }
 
-  // 如果分拨墙离线，显示图片右下角的“未检测到分拨墙”样式
   return (
-    <div className={`bg-[#1a1a1a] rounded-xl border border-white/5 flex flex-col overflow-hidden relative ${className}`}>
-      <div className="pt-2 px-3">
-        <span className="text-[10px] font-black text-gray-500 tracking-tight uppercase">墙号：-</span>
+    <div className={`flex flex-col relative ${className}`}>
+      <div className="mb-0.5 px-1">
+        <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Wall: -</span>
       </div>
-      
-      <div className="flex-1 flex flex-col items-center justify-center relative">
-        {/* 背景水印 "HI" */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03]">
-          <span className="text-[120px] font-black italic tracking-tighter select-none">HI</span>
-        </div>
-        
-        {/* 提示文字 */}
-        <div className="relative z-10 flex flex-col items-center gap-1">
-          <span className="text-xl font-bold text-gray-600 tracking-widest">未检测到分拨墙</span>
-          <div className="w-8 h-1 bg-gray-700/30 rounded-full mt-2"></div>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center border border-white/5 rounded-lg bg-black/10 overflow-hidden">
+        <span className="text-[10px] font-bold text-gray-800 tracking-wider">OFFLINE</span>
       </div>
     </div>
   );
