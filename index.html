@@ -1,30 +1,36 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>FlexiNode V1.0</title>
+    <link rel="icon" href="data:,">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      window.__VUE_OPTIONS_API__ = true;
+      window.__VUE_PROD_DEVTOOLS__ = false;
+      window.__VUE_PROD_HYDRATION_MISMATCH_DETAILS__ = false;
+    </script>
     <style>
       body {
         background-color: #0c0c0c;
         color: #e5e7eb;
         overflow: hidden;
         user-select: none;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
       ::-webkit-scrollbar {
         width: 6px;
       }
       ::-webkit-scrollbar-thumb {
         background: #333;
-        border-radius: 10px;
+        border-radius: 3px;
       }
     </style>
-<script type="importmap">
+    <script type="importmap">
 {
   "imports": {
+    "vue": "https://unpkg.com/vue@3.4.19/dist/vue.esm-browser.js",
+    "lucide-vue-next": "https://esm.sh/lucide-vue-next@0.344.0?external=vue",
     "react": "https://esm.sh/react@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/",
@@ -32,8 +38,9 @@
   }
 }
 </script>
-</head>
-<body>
-    <div id="root"></div>
-</body>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="./index.js"></script>
+  </body>
 </html>

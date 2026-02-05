@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "vue": "3.4.19",
+    "lucide-vue-next": "0.344.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "lucide-react": "^0.563.0"
