@@ -94,7 +94,9 @@ const App = {
     // --- FE -> BE 指令 ---
     handleModeToggle(mode) {
       this.sortingMode = mode;
-      callBackend('CURRENT_MODE', { currentMode: mode });
+      // 按照用户要求，将参数改为数字类型: 1:单件，2:多件
+      const modeValue = mode === 'single' ? 1 : 2;
+      callBackend('CURRENT_MODE', { currentMode: modeValue });
     },
     handleSlotClick(wallId, slotId) {
       callBackend('SLOT_CLICK', { wallId, slotId });
