@@ -1,13 +1,14 @@
+
 <script setup>
 import { computed } from 'vue';
-import { Minus, Plus, CircleCheck, Image as ImageIcon, Scan, AlertCircle } from 'lucide-vue-next';
+import { Minus, Plus, CheckCircle, Image as ImageIcon, Scan, AlertCircle } from 'lucide-vue-next';
 
 const props = defineProps(['order', 'mode', 'feedback']);
 const emit = defineEmits(['toggle-mode', 'update-actual', 'dispatch']);
 
 const fbStyle = computed(() => {
   switch (props.feedback.type) {
-    case 'success': return { color: 'text-[#64C84C]', icon: CircleCheck, filled: true };
+    case 'success': return { color: 'text-[#64C84C]', icon: CheckCircle, filled: true };
     case 'error': return { color: 'text-red-500', icon: AlertCircle, filled: false };
     default: return { color: 'text-cyan-400', icon: Scan, filled: false };
   }
@@ -16,7 +17,6 @@ const fbStyle = computed(() => {
 
 <template>
   <div class="h-full flex flex-col p-2.5 gap-2 overflow-hidden font-sans">
-    <!-- 投递模式 - 工业级切换 -->
     <div class="flex items-center justify-between px-1">
       <span class="text-xs font-bold text-gray-400 uppercase tracking-tighter">投递模式</span>
       <div class="flex bg-black/40 p-0.5 rounded-lg border border-white/5">
@@ -37,7 +37,6 @@ const fbStyle = computed(() => {
       </div>
     </div>
 
-    <!-- 订单信息 -->
     <div class="grid grid-cols-2 gap-x-2 gap-y-1 p-2 bg-white/5 rounded-lg border border-white/5 text-[10px]">
       <div class="flex gap-1 overflow-hidden"><span class="text-gray-500 shrink-0">单号:</span><span class="text-gray-200 font-mono truncate leading-tight">{{ order.orderId || '-' }}</span></div>
       <div class="flex gap-1 overflow-hidden"><span class="text-gray-500 shrink-0">条码:</span><span class="text-cyan-400 font-mono truncate font-bold leading-tight">{{ order.barcode || '-' }}</span></div>
@@ -45,7 +44,6 @@ const fbStyle = computed(() => {
       <div class="flex gap-1"><span class="text-gray-500 shrink-0">应发:</span><span class="text-cyan-400 font-black leading-tight">{{ order.required || 0 }}</span></div>
     </div>
 
-    <!-- 实发数量 -->
     <div class="flex items-center justify-between px-1 py-1 border-y border-white/5">
       <span class="text-[11px] font-black text-gray-100 uppercase tracking-tighter">实发数量</span>
       <div class="flex items-center gap-1.5">
@@ -69,7 +67,6 @@ const fbStyle = computed(() => {
       </div>
     </div>
 
-    <!-- 图片展示区 - 极大化 -->
     <div class="flex-1 min-h-0 relative border border-white/5 rounded-xl bg-black/50 flex items-center justify-center overflow-hidden group">
       <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.05),transparent)]"></div>
       <div class="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-cyan-500/40 rounded-tl-sm"></div>
@@ -83,7 +80,6 @@ const fbStyle = computed(() => {
       </div>
     </div>
 
-    <!-- 底部反馈栏 -->
     <div class="space-y-1.5 mt-auto">
       <button 
         @click="emit('dispatch')"
@@ -98,7 +94,6 @@ const fbStyle = computed(() => {
         <span class="text-[11px] font-black tracking-widest uppercase" :class="fbStyle.color">
           {{ feedback.text }}
         </span>
-        <!-- 修复图标展示 -->
         <component :is="fbStyle.icon" :class="fbStyle.color" :size="18" :fill="fbStyle.filled ? 'currentColor' : 'none'" />
       </div>
     </div>
