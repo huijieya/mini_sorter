@@ -1,9 +1,10 @@
+
 import { computed } from 'vue';
 import { Minus, Plus, CheckCircle, Image as ImageIcon, Scan, AlertCircle } from 'lucide-vue-next';
 
 export default {
   name: 'ControlPanel',
-  props: ['order', 'mode', 'feedback'],
+  props: ['order', 'mode', 'feedback', 'cameraImg'],
   emits: ['toggle-mode', 'update-actual', 'dispatch'],
   components: { Minus, Plus, CheckCircle, ImageIcon, Scan, AlertCircle },
   setup(props) {
@@ -15,9 +16,7 @@ export default {
       }
     });
 
-    return {
-      fbStyle
-    };
+    return { fbStyle };
   },
   template: `
   <div class="h-full flex flex-col p-2.5 gap-2 overflow-hidden font-sans">
@@ -71,17 +70,23 @@ export default {
       </div>
     </div>
 
-    <div class="flex-1 min-h-0 relative border border-white/5 rounded-xl bg-black/50 flex items-center justify-center overflow-hidden group">
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.05),transparent)]"></div>
+    <!-- 相机画面预览区域 (协议 3.6) -->
+    <div class="flex-1 min-h-0 relative border border-white/5 rounded-xl bg-black/50 flex items-center justify-center overflow-hidden group shadow-inner">
+      <template v-if="cameraImg">
+        <img :src="cameraImg" class="w-full h-full object-cover" />
+      </template>
+      <template v-else>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.05),transparent)]"></div>
+        <div class="flex flex-col items-center gap-1 opacity-10 group-hover:opacity-25 transition-all duration-500 scale-90">
+          <ImageIcon :size="48" :stroke-width="1" />
+          <span class="text-[7px] font-black tracking-[0.3em] uppercase">Camera Standby</span>
+        </div>
+      </template>
+      
       <div class="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-cyan-500/40 rounded-tl-sm"></div>
       <div class="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-cyan-500/40 rounded-tr-sm"></div>
       <div class="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-cyan-500/40 rounded-bl-sm"></div>
       <div class="absolute bottom-1 right-1 w-2.5 h-2.5 border-b-2 border-r-2 border-cyan-500/40 rounded-br-sm"></div>
-      
-      <div class="flex flex-col items-center gap-1 opacity-10 group-hover:opacity-25 transition-all duration-500 scale-90">
-        <ImageIcon :size="48" :stroke-width="1" />
-        <span class="text-[7px] font-black tracking-[0.3em] uppercase">Visual Hub Standby</span>
-      </div>
     </div>
 
     <div class="space-y-1.5 mt-auto">

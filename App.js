@@ -1,3 +1,4 @@
+
 import Header from './components/Header.js';
 import StatusBar from './components/StatusBar.js';
 import WallGrid from './components/WallGrid.js';
@@ -15,162 +16,206 @@ const SlotStatus = {
 
 const App = {
   name: 'App',
-  
-  components: {
-    Header,
-    StatusBar,
-    WallGrid,
-    ControlPanel,
-    SettingsOverlay
-  },
-  
+  components: { Header, StatusBar, WallGrid, ControlPanel, SettingsOverlay },
   template: `
-    <div class="h-screen w-screen flex flex-col bg-[#0c0c0c] text-gray-200 overflow-hidden select-none font-sans">
-      <Header @open-settings="showSettings = true" />
+    <div class="h-screen w-screen flex flex-col bg-[#0c0c0c] text-gray-200 overflow-hidden select-none font-sans relative">
+      <Header @open-settings="showSettings = true" @open-dev="showDev = !showDev" />
 
       <main class="flex-1 m-2 mt-0 p-2 bg-[#161616] rounded-xl flex flex-col gap-1.5 overflow-hidden border border-white/5 shadow-2xl">
         <StatusBar :status="hwStatus" />
 
         <div class="flex-1 flex gap-2 min-h-0 overflow-hidden">
           <div class="flex flex-col gap-2 w-[24%] h-full">
-            <WallGrid :wall="walls[0]" @slot-click="(id) => callBackend('SLOT_CLICK', { wallId: walls[0].id, slotId: id })" class="flex-1" />
-            <WallGrid :wall="walls[2]" @slot-click="(id) => callBackend('SLOT_CLICK', { wallId: walls[2].id, slotId: id })" class="flex-1" />
+            <WallGrid :wall="walls[0]" @slot-click="handleSlotClick" class="flex-1" />
+            <WallGrid :wall="walls[2]" @slot-click="handleSlotClick" class="flex-1" />
           </div>
 
-          <div class="flex-1 min-w-[320px] bg-black/30 border border-white/5 rounded-xl overflow-hidden shadow-inner backdrop-blur-sm">
+          <div class="flex-1 min-w-[320px] bg-black/30 border border-white/5 rounded-xl overflow-hidden shadow-inner backdrop-blur-sm relative">
             <ControlPanel 
               :order="order" 
               :mode="sortingMode" 
               :feedback="feedback"
-              @toggle-mode="(m) => sortingMode = m"
+              :camera-img="cameraImg"
+              @toggle-mode="handleModeToggle"
               @update-actual="(val) => order.actual = val"
-              @dispatch="handleDispatch(order)"
+              @dispatch="handleDispatch"
             />
           </div>
 
           <div class="flex flex-col gap-2 w-[24%] h-full">
-            <WallGrid :wall="walls[1]" @slot-click="(id) => callBackend('SLOT_CLICK', { wallId: walls[1].id, slotId: id })" class="flex-1" />
-            <WallGrid :wall="walls[3]" @slot-click="(id) => callBackend('SLOT_CLICK', { wallId: walls[3].id, slotId: id })" class="flex-1" />
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between mt-0.5 px-1 h-5">
-          <div class="flex items-center gap-3">
-            <span class="text-[9px] font-bold text-gray-600 uppercase tracking-tighter">格口状态</span>
-            <div class="flex items-center gap-2">
-              <div class="flex items-center gap-1"><div class="w-2 h-1.5 bg-gray-600 rounded-sm"></div><span class="text-[8px] text-gray-500 font-bold">关闭</span></div>
-              <div class="flex items-center gap-1"><div class="w-2 h-1.5 bg-[#64C84C] rounded-sm"></div><span class="text-[8px] text-gray-500 font-bold">打开</span></div>
-              <div class="flex items-center gap-1"><div class="w-2 h-1.5 bg-[#f88133] rounded-sm"></div><span class="text-[8px] text-gray-500 font-bold">进行</span></div>
-              <div class="flex items-center gap-1"><div class="w-2 h-1.5 bg-[#ffc634] rounded-sm"></div><span class="text-[8px] text-gray-500 font-bold">满箱</span></div>
-              <div class="flex items-center gap-1"><div class="w-2 h-1.5 bg-[#22D3EE] rounded-sm"></div><span class="text-[8px] text-gray-500 font-bold">完成</span></div>
-            </div>
-          </div>
-          <div class="flex items-baseline gap-0.5 opacity-10 scale-50 origin-right">
-            <span class="text-xl font-black italic tracking-tighter text-gray-100">HYPER</span>
-            <span class="text-xl font-black italic tracking-tighter text-gray-500">LEAP</span>
+            <WallGrid :wall="walls[1]" @slot-click="handleSlotClick" class="flex-1" />
+            <WallGrid :wall="walls[3]" @slot-click="handleSlotClick" class="flex-1" />
           </div>
         </div>
       </main>
 
       <SettingsOverlay v-if="showSettings" @close="showSettings = false" />
+
+      <!-- 开发模拟器面板 (仅用于模拟测试后端推送) -->
+      <div v-if="showDev" class="absolute top-16 right-4 z-[60] bg-[#222] border border-cyan-500/50 p-4 rounded-xl shadow-2xl w-80 text-[10px] space-y-2">
+        <h3 class="text-cyan-400 font-bold border-b border-white/10 pb-1 mb-2">协议模拟器 (BE to FE)</h3>
+        <div class="grid grid-cols-2 gap-2">
+          <button @click="simulate('INIT_CONFIG')" class="bg-gray-700 p-1 rounded">模拟初始化</button>
+          <button @click="simulate('STATUS_SYNC')" class="bg-gray-700 p-1 rounded">模拟硬件断开</button>
+          <button @click="simulate('SCAN_RESULT')" class="bg-cyan-900 p-1 rounded">模拟扫码成功</button>
+          <button @click="simulate('SITE_UPDATE')" class="bg-orange-900 p-1 rounded">模拟料框更新</button>
+          <button @click="simulate('COMMON_RESULT')" class="bg-green-900 p-1 rounded">模拟通用成功</button>
+          <button @click="simulate('CAMERA_RESULT')" class="bg-purple-900 p-1 rounded">模拟相机流</button>
+        </div>
+        <p class="text-gray-500 italic mt-2">提示：点击上方按钮测试前端对后端的响应逻辑</p>
+      </div>
     </div>
   `,
   
   data() {
     return {
       showSettings: false,
+      showDev: false,
       sortingMode: 'multi',
-      feedback: { text: '请扫码', type: 'info' },
-      hwStatus: { cameraConnected: true, deviceConnected: true, wesConnected: true },
+      feedback: { text: '系统就绪', type: 'info' },
+      cameraImg: '',
+      hwStatus: { 
+        cameraConnected: false, 
+        networkConnected: false, 
+        networkMode: 'wired',
+        wesConnected: true 
+      },
       walls: [
-        { 
-          id: 'w1', name: 'Wall001', online: true, 
-          slots: Array.from({ length: 20 }, (_, i) => ({ 
-            id: `A${i+1}`, label: `A${i+1}`,
-            status: i === 0 ? SlotStatus.OPEN : i === 7 ? SlotStatus.FULL : i === 8 ? SlotStatus.IN_PROGRESS : i === 11 ? SlotStatus.FINISHED : SlotStatus.CLOSED,
-            count: i === 0 ? 10 : i === 11 ? 16 : 0
-          })) 
-        },
-        { id: 'w2', name: 'Wall002', online: true, slots: Array.from({ length: 20 }, (_, i) => ({ id: `C${i+1}`, label: `C${i+1}`, count: 0, status: SlotStatus.CLOSED })) },
-        { id: 'w3', name: 'Wall003', online: true, slots: Array.from({ length: 20 }, (_, i) => ({ id: `B${i+1}`, label: `B${i+1}`, count: 0, status: SlotStatus.CLOSED })) },
-        { id: 'w4', name: 'Wall004', online: true, slots: Array.from({ length: 20 }, (_, i) => ({ id: `D${i+1}`, label: `D${i+1}`, count: 0, status: SlotStatus.CLOSED })) },
+        { id: 'w1', name: 'Wall01', online: true, slots: [] },
+        { id: 'w2', name: 'Wall02', online: true, slots: [] },
+        { id: 'w3', name: 'Wall03', online: true, slots: [] },
+        { id: 'w4', name: 'Wall04', online: false, slots: [] },
       ],
-      order: {
-        orderId: 'OD20251234',
-        barcode: 'SN20259901',
-        name: '某XL女式T恤',
-        required: 10,
-        actual: 5
-      }
+      order: { orderId: '', barcode: '', name: '请扫码', required: 0, actual: 0 }
     };
   },
   
   methods: {
-    handleDispatch(targetOrder) {
-      if (!targetOrder.barcode || targetOrder.barcode === '-') return;
-      
-      callBackend('DISPATCH_CONFIRM', { 
-        orderId: targetOrder.orderId, 
-        barcode: targetOrder.barcode, 
-        actual: this.sortingMode === 'single' ? targetOrder.required : targetOrder.actual 
-      });
-
-      this.feedback = { text: '发车成功', type: 'success' };
-      
-      setTimeout(() => {
-        this.order = { orderId: '', barcode: '', name: '请扫码', required: 0, actual: 0 };
-        this.feedback = { text: '请扫码', type: 'info' };
-      }, 1500);
+    // --- FE -> BE 指令 ---
+    handleModeToggle(mode) {
+      this.sortingMode = mode;
+      callBackend('CURRENT_MODE', { currentMode: mode });
     },
-    
-    handleBackendMessage(key, res) {
-      if (res.code !== 0) {
-        this.feedback = { text: res.message || '识别失败', type: 'error' };
-        return;
-      }
+    handleSlotClick(wallId, slotId) {
+      callBackend('SLOT_CLICK', { wallId, slotId });
+    },
+    handleDispatch() {
+      callBackend('ROBOT__DEPARTURE', { 
+        barcode: this.order.barcode, 
+        newActual: this.order.actual 
+      });
+    },
 
-      const { data } = res;
+    // --- BE -> FE 响应处理 (协议 3.0) ---
+    processBackendMessage(key, params) {
       switch (key) {
-        case 'STATUS_SYNC':
-          if (data.hardware) this.hwStatus = data.hardware;
+        case 'INIT_CONFIG': // 3.1
+          if (params.walls) this.walls = params.walls;
+          if (params.order) this.order = { ...params.order };
           break;
 
-        case 'SCAN_RESULT':
-          const newOrder = data.order;
-          this.order = { ...newOrder, actual: newOrder.required };
-          this.feedback = { text: '识别成功', type: 'success' };
-          
-          if (data.target) {
-            const { wallId, slotId } = data.target;
-            this.walls = this.walls.map(w => w.id === wallId ? {
-              ...w,
-              slots: w.slots.map(s => s.id === slotId ? { ...s, status: SlotStatus.OPEN } : s)
-            } : w);
-          }
-
-          if (this.sortingMode === 'single') {
-            setTimeout(() => this.handleDispatch(newOrder), 600);
+        case 'STATUS_SYNC': // 3.2
+          this.hwStatus.cameraConnected = params.cameraConnected;
+          this.hwStatus.networkConnected = params.networkConnected;
+          this.hwStatus.networkMode = params.networkMode;
+          // 更新墙面在线状态
+          if (params.walls) {
+            params.walls.forEach(pw => {
+              const wall = this.walls.find(w => w.id === pw.id);
+              if (wall) wall.online = pw.online;
+            });
           }
           break;
 
-        case 'WALL_UPDATE':
-          this.walls = this.walls.map(w => w.id === data.wallId ? {
-            ...w,
-            slots: w.slots.map(s => s.id === data.slotId ? { 
-              ...s, 
-              count: data.count, 
-              status: data.status || s.status 
-            } : s)
-          } : w);
+        case 'SCAN_RESULT': // 3.3
+          if (params.order) {
+            this.order = { ...params.order };
+            this.feedback = { text: '识别成功', type: 'success' };
+          }
+          if (params.target && params.target.slotId) {
+            this.updateSlotStatus(params.target.slotId, SlotStatus.OPEN);
+          }
           break;
+
+        case 'SITE_UPDATE': // 3.4
+          if (Array.isArray(params)) {
+            params.forEach(update => {
+              this.updateSlotByUpdate(update);
+            });
+          }
+          break;
+
+        case 'COMMON_RESULT': // 3.5
+          this.feedback = { 
+            text: params.message || '操作成功', 
+            type: params.message.includes('失败') ? 'error' : 'success' 
+          };
+          break;
+
+        case 'CAMERA_RESULT': // 3.6
+          this.cameraImg = params.imageBase64;
+          break;
+      }
+    },
+
+    updateSlotByUpdate(update) {
+      // 在所有墙中寻找对应的 slotId
+      this.walls.forEach(wall => {
+        const slot = wall.slots.find(s => s.id === update.id);
+        if (slot) {
+          if (update.count !== undefined) slot.count = update.count;
+          if (update.status === 'CLEAR') {
+            slot.status = SlotStatus.CLOSED; // 清除状态回到默认
+          } else if (update.status) {
+            // 这里将协议中的大写映射到前端小写枚举
+            slot.status = update.status.toLowerCase();
+          }
+        }
+      });
+    },
+
+    updateSlotStatus(slotId, status) {
+      this.walls.forEach(wall => {
+        const slot = wall.slots.find(s => s.id === slotId);
+        if (slot) slot.status = status;
+      });
+    },
+
+    // --- 模拟器逻辑 ---
+    simulate(key) {
+      const mockData = {
+        'INIT_CONFIG': {
+          walls: Array.from({ length: 4 }, (_, i) => ({
+            id: `w${i+1}`, name: `Wall0${i+1}`, online: i < 3,
+            slots: Array.from({ length: 20 }, (_, j) => ({
+              id: `${String.fromCharCode(65+i)}${j+1}`,
+              label: `${String.fromCharCode(65+i)}${j+1}`,
+              count: 0, status: SlotStatus.CLOSED
+            }))
+          })),
+          order: { orderId: 'OD-TEST-001', barcode: 'SN998877', name: '模拟物料A', required: 5, actual: 5 }
+        },
+        'STATUS_SYNC': { cameraConnected: true, networkConnected: false, networkMode: 'wireless', walls: [{id: 'w4', online: true}] },
+        'SCAN_RESULT': { 
+          order: { orderId: 'OD-SCAN-102', barcode: 'SN665544', name: '模拟扫码物料', required: 10, actual: 10 },
+          target: { slotId: 'A8' }
+        },
+        'SITE_UPDATE': [{ id: 'A8', count: 1, status: 'IN-PROGRESS' }],
+        'COMMON_RESULT': { message: '发车指令已接收' },
+        'CAMERA_RESULT': { imageBase64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' }
+      };
+
+      if (window.onCSharpResponse) {
+        window.onCSharpResponse(key, mockData[key]);
       }
     }
   },
   
   mounted() {
-    listenFromBackend(this.handleBackendMessage);
+    listenFromBackend(this.processBackendMessage);
+    // 页面加载完成请求初始化 (协议 2.1)
     callBackend('INIT_REQUEST', {});
   }
 };
-//
+
 export default App;
