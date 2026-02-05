@@ -26,7 +26,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
 
   return (
     <div className="h-full flex flex-col p-2.5 gap-2 overflow-hidden font-sans">
-      {/* 投递模式 - 工业风格切换器 */}
+      {/* 投递模式 切换器 */}
       <div className="flex items-center justify-between px-1">
         <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">投递模式</span>
         <div className="flex bg-black/40 p-0.5 rounded-lg border border-white/5">
