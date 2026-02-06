@@ -9,9 +9,9 @@ export const callBackend = (key, params = {}) => {
   if (window.chrome && window.chrome.webview) {
     // 严格遵循协议 1.2: { key, res }
     window.chrome.webview.postMessage({ key, res: params });
-    console.debug(`[FE -> BE] Sending:`, { key, res: params });
+    console.log(`[FE -> BE] Sending:`, { key, res: params });
   } else {
-    console.warn(`[FE -> BE] WebView2 not found. Simulated Key: ${key}`, params);
+    console.log(`[FE -> BE] WebView2 not found. Simulated Key: ${key}`, params);
   }
 };
 
@@ -23,7 +23,7 @@ export const callBackend = (key, params = {}) => {
 export const listenFromBackend = (callback) => {
   // 严格遵循协议 1.1: window.onCSharpResponse(key, params)
   window.onCSharpResponse = (key, params) => {
-    console.debug(`[BE -> FE] Received:`, { key, params });
+    console.log(`[BE -> FE] Received:`, { key, params });
     callback(key, params);
   };
 };

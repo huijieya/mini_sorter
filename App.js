@@ -147,7 +147,6 @@ const App = {
         callBackend('CURRENT_MODE', { currentMode: modeValue });
       } else if (this.confirmModal.type === 'power') {
         callBackend('SYSTEM_POWER_OFF', { immediate: true });
-        // 模拟退出
         console.log("System Powering Off...");
       }
       this.confirmModal.show = false;
@@ -165,7 +164,6 @@ const App = {
           if (params.order) this.order = { ...params.order };
           break;
         case 'STATUS_SYNC':
-          // 完整同步连接状态字段
           if (params.cameraConnected !== undefined) this.hwStatus.cameraConnected = params.cameraConnected;
           if (params.networkConnected !== undefined) this.hwStatus.networkConnected = params.networkConnected;
           if (params.networkMode !== undefined) this.hwStatus.networkMode = params.networkMode;
@@ -223,9 +221,20 @@ const App = {
 
       const mockData = {
         'INIT_CONFIG_2': { key: 'INIT_CONFIG', params: { walls: [{ id: "0", name: "Wall_Left", online: true, slots: generateSlots('wall1') }, { id: "1", name: "Wall_Right", online: true, slots: generateSlots('wall2') }], order: { orderId: 'MOCK-001', barcode: 'SN123', name: '待分拣物料', required: 2, actual: 0 } } },
-        'INIT_CONFIG_4': { key: 'INIT_CONFIG', params: { walls: [{ id: "0", name: "Wall1", online: true, slots: generateSlots('wall1') }, { id: "1", name: "Wall2", online: true, slots: generateSlots('wall2') }, { id: "2", name: "Wall3", online: true, slots: generateSlots('wall3') }, { id: "3", name: "Wall4", online: true, slots: generateSlots('wall4') }], order: { orderId: 'MOCK-004', barcode: 'SN444', name: '四墙测试', required: 10, actual: 0 } } }
+        'INIT_CONFIG_4': { key: 'INIT_CONFIG', params: { walls: [{ id: "0", name: "Wall1", online: true, slots: generateSlots('wall1') }, { id: "1", name: "Wall2", online: true, slots: generateSlots('wall2') }, { id: "2", name: "Wall3", online: true, slots: generateSlots('wall3') }, { id: "3", name: "Wall4", online: true, slots: generateSlots('wall4') }], order: { orderId: 'MOCK-004', barcode: 'SN444', name: '四墙测试', required: 10, actual: 0 } } },
+        'SCAN_RESULT': { key: 'SCAN_RESULT', params: { order: { orderId: 'MOCK-SCAN', barcode: 'SCAN123456', name: '模拟扫码物料', required: 5, actual: 1 }, target: { slotId: 'wall1_1_1' } } },
+        'SITE_UPDATE': { key: 'SITE_UPDATE', params: [{ id: 'wall1_1_1', count: 2, status: 'IN-PROGRESS' }] }
       };
-      if (mockData[key]) window.onCSharpResponse(mockData[key].key, mockData[key].params);
+      
+      if (mockData[key]) {
+        // 使用 window.onCSharpResponse 模拟后端推送以确保流程完整性
+        if (typeof window.onCSharpResponse === 'function') {
+          window.onCSharpResponse(mockData[key].key, mockData[key].params);
+        } else {
+          // 如果 bridge 未初始化，直接内部调用处理方法
+          this.processBackendMessage(mockData[key].key, mockData[key].params);
+        }
+      }
     }
   },
   mounted() {
