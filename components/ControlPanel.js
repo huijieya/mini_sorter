@@ -5,7 +5,7 @@ import { Minus, Plus, CheckCircle, Image as ImageIcon, Scan, AlertCircle } from 
 export default {
   name: 'ControlPanel',
   props: ['order', 'mode', 'feedback', 'cameraImg'],
-  emits: ['toggle-mode', 'update-actual', 'dispatch'],
+  emits: ['request-mode-toggle', 'update-actual', 'dispatch'],
   components: { Minus, Plus, CheckCircle, ImageIcon, Scan, AlertCircle },
   setup(props) {
     const fbStyle = computed(() => {
@@ -24,14 +24,14 @@ export default {
       <span class="text-xs font-bold text-gray-400 uppercase tracking-tighter">投递模式</span>
       <div class="flex bg-black/40 p-0.5 rounded-lg border border-white/5">
         <button 
-          @click="$emit('toggle-mode', 'single')"
+          @click="$emit('request-mode-toggle', 'single')"
           class="px-3 py-1 rounded text-[10px] font-bold transition-all"
           :class="mode === 'single' ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20' : 'text-gray-500 hover:text-gray-300'"
         >
           单件
         </button>
         <button 
-          @click="$emit('toggle-mode', 'multi')"
+          @click="$emit('request-mode-toggle', 'multi')"
           class="px-3 py-1 rounded text-[10px] font-bold transition-all"
           :class="mode === 'multi' ? 'bg-[#64C84C] text-black shadow-lg shadow-green-500/20' : 'text-gray-500 hover:text-gray-300'"
         >
@@ -40,6 +40,7 @@ export default {
       </div>
     </div>
 
+    <!-- 订单信息、实发数量、相机画面等逻辑保持不变... -->
     <div class="grid grid-cols-2 gap-x-2 gap-y-1 p-2 bg-white/5 rounded-lg border border-white/5 text-[10px]">
       <div class="flex gap-1 overflow-hidden"><span class="text-gray-500 shrink-0">单号:</span><span class="text-gray-200 font-mono truncate leading-tight">{{ order.orderId || '-' }}</span></div>
       <div class="flex gap-1 overflow-hidden"><span class="text-gray-500 shrink-0">条码:</span><span class="text-cyan-400 font-mono truncate font-bold leading-tight">{{ order.barcode || '-' }}</span></div>
@@ -70,19 +71,12 @@ export default {
       </div>
     </div>
 
-    <!-- 相机画面预览区域 (协议 3.6) -->
     <div class="flex-1 min-h-0 relative border border-white/5 rounded-xl bg-black/50 flex items-center justify-center overflow-hidden group shadow-inner">
-      <template v-if="cameraImg">
-        <img :src="cameraImg" class="w-full h-full object-cover" />
-      </template>
-      <template v-else>
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.05),transparent)]"></div>
-        <div class="flex flex-col items-center gap-1 opacity-10 group-hover:opacity-25 transition-all duration-500 scale-90">
-          <ImageIcon :size="48" :stroke-width="1" />
-          <span class="text-[7px] font-black tracking-[0.3em] uppercase">Camera Standby</span>
-        </div>
-      </template>
-      
+      <img v-if="cameraImg" :src="cameraImg" class="w-full h-full object-cover" />
+      <div v-else class="flex flex-col items-center gap-1 opacity-10 group-hover:opacity-25 transition-all duration-500 scale-90">
+        <ImageIcon :size="48" :stroke-width="1" />
+        <span class="text-[7px] font-black tracking-[0.3em] uppercase">Camera Standby</span>
+      </div>
       <div class="absolute top-1 left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-cyan-500/40 rounded-tl-sm"></div>
       <div class="absolute top-1 right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-cyan-500/40 rounded-tr-sm"></div>
       <div class="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-cyan-500/40 rounded-bl-sm"></div>
