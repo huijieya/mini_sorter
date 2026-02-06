@@ -62,14 +62,15 @@ const App = {
       />
 
       <!-- 开发模拟器 -->
-      <div v-if="showDev" class="absolute top-16 right-4 z-[60] bg-[#222] border border-cyan-500/50 p-4 rounded-xl shadow-2xl w-80 text-[10px] space-y-2">
+      <div v-if="showDev" class="absolute bottom-16 right-4 z-[60] bg-[#222] border border-cyan-500/50 p-4 rounded-xl shadow-2xl w-80 text-[10px] space-y-2">
         <h3 class="text-cyan-400 font-bold border-b border-white/10 pb-1 mb-2">协议模拟器 (BE to FE)</h3>
         <div class="grid grid-cols-2 gap-2">
           <button @click="simulate('INIT_CONFIG_2')" class="bg-blue-900 p-1 rounded">模拟2面墙初始化</button>
           <button @click="simulate('INIT_CONFIG_4')" class="bg-indigo-900 p-1 rounded">模拟4面墙初始化</button>
           <button @click="simulate('SCAN_RESULT')" class="bg-cyan-900 p-1 rounded">模拟扫码成功</button>
           <button @click="simulate('SITE_UPDATE')" class="bg-orange-900 p-1 rounded">模拟料框更新</button>
-          <button @click="simulate('NET_TOGGLE')" class="bg-purple-900 p-1 rounded col-span-2">模拟网络切换/断开</button>
+          <button @click="simulate('CAMERA_RESULT')" class="bg-pink-900 p-1 rounded">模拟相机画面</button>
+          <button @click="simulate('NET_TOGGLE')" class="bg-purple-900 p-1 rounded">模拟网络切换</button>
           <button @click="simulate('DEPARTURE_SUCCESS')" class="bg-green-900 p-1 rounded col-span-2">模拟下发成功</button>
         </div>
       </div>
@@ -184,6 +185,14 @@ const App = {
         case 'SITE_UPDATE':
           if (Array.isArray(params)) params.forEach(update => this.updateSlotByUpdate(update));
           break;
+        case 'CAMERA_RESULT':
+          if (params) {
+            const base64 = typeof params === 'string' ? params : params.imageBase64;
+            if (base64) {
+              this.cameraImg = base64.startsWith('data:') ? base64 : `data:image/jpeg;base64,${base64}`;
+            }
+          }
+          break;
         case 'COMMON_RESULT':
           this.feedback = { text: params.message || '操作成功', type: params.message?.includes('失败') ? 'error' : 'success' };
           break;
@@ -232,6 +241,7 @@ const App = {
         'INIT_CONFIG_4': { key: 'INIT_CONFIG', params: { walls: [{ id: "0", name: "Wall1", online: true, slots: generateSlots('wall1') }, { id: "1", name: "Wall2", online: true, slots: generateSlots('wall2') }, { id: "2", name: "Wall3", online: true, slots: generateSlots('wall3') }, { id: "3", name: "Wall4", online: true, slots: generateSlots('wall4') }], order: { orderId: 'MOCK-004', barcode: 'SN444', name: '四墙测试', required: 10, actual: 0 } } },
         'SCAN_RESULT': { key: 'SCAN_RESULT', params: { order: { orderId: 'MOCK-SCAN', barcode: 'SCAN123456', name: '模拟扫码物料', required: 5, actual: 1 }, target: { slotId: 'wall1_1_1' } } },
         'SITE_UPDATE': { key: 'SITE_UPDATE', params: [{ id: 'wall1_1_1', count: 2, status: 'IN-PROGRESS' }] },
+        'CAMERA_RESULT': { key: 'CAMERA_RESULT', params: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' },
         'DEPARTURE_SUCCESS': { key: 'DEPARTURE_SUCCESS', params: {} }
       };
       
