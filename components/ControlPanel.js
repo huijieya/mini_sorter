@@ -10,7 +10,7 @@ export default {
   setup(props) {
     const fbStyle = computed(() => {
       switch (props.feedback.type) {
-        case 'success': return { color: 'text-[#64C84C]', icon: Check, filled: true };
+        case 'success': return { color: 'text-[#64C84C]', icon: Check, filled: false };
         case 'error': return { color: 'text-red-500', icon: AlertCircle, filled: false };
         default: return { color: 'text-cyan-400', icon: Scan, filled: false };
       }
@@ -40,7 +40,6 @@ export default {
       </div>
     </div>
 
-    <!-- 订单信息、实发数量、相机画面等逻辑保持不变... -->
     <div class="grid grid-cols-2 gap-x-2 gap-y-1 p-2 bg-white/5 rounded-lg border border-white/5 text-[10px]">
       <div class="flex gap-1 overflow-hidden"><span class="text-gray-500 shrink-0">单号:</span><span class="text-gray-200 font-mono truncate leading-tight">{{ order.orderId || '-' }}</span></div>
       <div class="flex gap-1 overflow-hidden"><span class="text-gray-500 shrink-0">条码:</span><span class="text-cyan-400 font-mono truncate font-bold leading-tight">{{ order.barcode || '-' }}</span></div>
@@ -86,9 +85,9 @@ export default {
     <div class="space-y-1.5 mt-auto">
       <button 
         @click="$emit('dispatch')"
-        :disabled="mode === 'single' || !order.barcode"
+        :disabled="mode === 'single' || !order.barcode || feedback.type === 'success'"
         class="w-full py-2.5 rounded-lg text-lg font-black uppercase tracking-tighter transition-all"
-        :class="mode === 'single' || !order.barcode ? 'bg-gray-800 text-gray-600 opacity-20 cursor-not-allowed' : 'bg-cyan-500 text-black hover:bg-cyan-400 active:scale-[0.98] shadow-lg shadow-cyan-500/20'"
+        :class="(mode === 'single' || !order.barcode || feedback.type === 'success') ? 'bg-gray-800 text-gray-600 opacity-20 cursor-not-allowed' : 'bg-cyan-500 text-black hover:bg-cyan-400 active:scale-[0.98] shadow-lg shadow-cyan-500/20'"
       >
         确认发车
       </button>
