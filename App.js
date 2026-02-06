@@ -70,6 +70,7 @@ const App = {
           <button @click="simulate('SCAN_RESULT')" class="bg-cyan-900 p-1 rounded">模拟扫码成功</button>
           <button @click="simulate('SITE_UPDATE')" class="bg-orange-900 p-1 rounded">模拟料框更新</button>
           <button @click="simulate('NET_TOGGLE')" class="bg-purple-900 p-1 rounded col-span-2">模拟网络切换/断开</button>
+          <button @click="simulate('DEPARTURE_SUCCESS')" class="bg-green-900 p-1 rounded col-span-2">模拟下发成功</button>
         </div>
       </div>
     </div>
@@ -79,7 +80,7 @@ const App = {
     return {
       showSettings: false,
       showDev: false,
-      sortingMode: 'multi',
+      sortingMode: 'single', // 'multi'
       feedback: { text: '系统就绪', type: 'info' },
       cameraImg: '',
       hwStatus: { cameraConnected: true, networkConnected: true, networkMode: 1, wesConnected: true },
@@ -155,7 +156,7 @@ const App = {
     // --- 其他业务逻辑 ---
     handleSlotClick(wallId, slotId) { callBackend('SLOT_CLICK', { wallId, slotId }); },
     handleDispatch() { 
-      callBackend('ROBOT__DEPARTURE', { barcode: this.order.barcode, newActual: this.order.actual }); 
+      callBackend('ROBOT_DEPARTURE', { barcode: this.order.barcode, newActual: this.order.actual }); 
     },
     processBackendMessage(key, params) {
       switch (key) {
@@ -185,6 +186,13 @@ const App = {
           break;
         case 'COMMON_RESULT':
           this.feedback = { text: params.message || '操作成功', type: params.message?.includes('失败') ? 'error' : 'success' };
+          break;
+        case 'DEPARTURE_SUCCESS':
+          this.feedback = { text: '下发成功', type: 'success' };
+          setTimeout(() => {
+            this.order = { orderId: '', barcode: '', name: '请扫码', required: 0, actual: 0 };
+            this.feedback = { text: '请扫码', type: 'info' };
+          }, 2000);
           break;
       }
     },
@@ -223,15 +231,14 @@ const App = {
         'INIT_CONFIG_2': { key: 'INIT_CONFIG', params: { walls: [{ id: "0", name: "Wall_Left", online: true, slots: generateSlots('wall1') }, { id: "1", name: "Wall_Right", online: true, slots: generateSlots('wall2') }], order: { orderId: 'MOCK-001', barcode: 'SN123', name: '待分拣物料', required: 2, actual: 0 } } },
         'INIT_CONFIG_4': { key: 'INIT_CONFIG', params: { walls: [{ id: "0", name: "Wall1", online: true, slots: generateSlots('wall1') }, { id: "1", name: "Wall2", online: true, slots: generateSlots('wall2') }, { id: "2", name: "Wall3", online: true, slots: generateSlots('wall3') }, { id: "3", name: "Wall4", online: true, slots: generateSlots('wall4') }], order: { orderId: 'MOCK-004', barcode: 'SN444', name: '四墙测试', required: 10, actual: 0 } } },
         'SCAN_RESULT': { key: 'SCAN_RESULT', params: { order: { orderId: 'MOCK-SCAN', barcode: 'SCAN123456', name: '模拟扫码物料', required: 5, actual: 1 }, target: { slotId: 'wall1_1_1' } } },
-        'SITE_UPDATE': { key: 'SITE_UPDATE', params: [{ id: 'wall1_1_1', count: 2, status: 'IN-PROGRESS' }] }
+        'SITE_UPDATE': { key: 'SITE_UPDATE', params: [{ id: 'wall1_1_1', count: 2, status: 'IN-PROGRESS' }] },
+        'DEPARTURE_SUCCESS': { key: 'DEPARTURE_SUCCESS', params: {} }
       };
       
       if (mockData[key]) {
-        // 使用 window.onCSharpResponse 模拟后端推送以确保流程完整性
         if (typeof window.onCSharpResponse === 'function') {
           window.onCSharpResponse(mockData[key].key, mockData[key].params);
         } else {
-          // 如果 bridge 未初始化，直接内部调用处理方法
           this.processBackendMessage(mockData[key].key, mockData[key].params);
         }
       }

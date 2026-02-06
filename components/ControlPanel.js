@@ -1,16 +1,16 @@
 
 import { computed } from 'vue';
-import { Minus, Plus, CheckCircle, Image as ImageIcon, Scan, AlertCircle } from 'lucide-vue-next';
+import { Minus, Plus, Check, Image as ImageIcon, Scan, AlertCircle } from 'lucide-vue-next';
 
 export default {
   name: 'ControlPanel',
   props: ['order', 'mode', 'feedback', 'cameraImg'],
   emits: ['request-mode-toggle', 'update-actual', 'dispatch'],
-  components: { Minus, Plus, CheckCircle, ImageIcon, Scan, AlertCircle },
+  components: { Minus, Plus, Check, ImageIcon, Scan, AlertCircle },
   setup(props) {
     const fbStyle = computed(() => {
       switch (props.feedback.type) {
-        case 'success': return { color: 'text-[#64C84C]', icon: CheckCircle, filled: true };
+        case 'success': return { color: 'text-[#64C84C]', icon: Check, filled: true };
         case 'error': return { color: 'text-red-500', icon: AlertCircle, filled: false };
         default: return { color: 'text-cyan-400', icon: Scan, filled: false };
       }

@@ -1,14 +1,14 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Minus, Plus, CheckCircle, Image as ImageIcon, Scan, AlertCircle } from 'lucide-vue-next';
+import { Minus, Plus, Check, Image as ImageIcon, Scan, AlertCircle } from 'lucide-vue-next';
 
 const props = defineProps(['order', 'mode', 'feedback']);
 const emit = defineEmits(['toggle-mode', 'update-actual', 'dispatch']);
 
 const fbStyle = computed(() => {
   switch (props.feedback.type) {
-    case 'success': return { color: 'text-[#64C84C]', icon: CheckCircle, filled: true };
+    case 'success': return { color: 'text-[#64C84C]', icon: Check, filled: true };
     case 'error': return { color: 'text-red-500', icon: AlertCircle, filled: false };
     default: return { color: 'text-cyan-400', icon: Scan, filled: false };
   }
