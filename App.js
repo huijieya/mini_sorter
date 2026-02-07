@@ -23,7 +23,7 @@ const App = {
         <StatusBar :status="hwStatus" />
 
         <div class="flex-1 flex gap-2 min-h-0 overflow-hidden">
-          <div class="flex flex-col gap-2 w-[24%] h-full">
+          <div class="flex flex-col gap-2 w-[30%] h-full">
             <template v-for="wall in leftWalls" :key="wall.id">
               <WallGrid :wall="wall" @slot-click="handleSlotClick" class="flex-1" />
             </template>
@@ -41,7 +41,7 @@ const App = {
             />
           </div>
 
-          <div class="flex flex-col gap-2 w-[24%] h-full">
+          <div class="flex flex-col gap-2 w-[30%] h-full">
             <template v-for="wall in rightWalls" :key="wall.id">
               <WallGrid :wall="wall" @slot-click="handleSlotClick" class="flex-1" />
             </template>

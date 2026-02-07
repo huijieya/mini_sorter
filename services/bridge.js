@@ -23,7 +23,7 @@ export const callBackend = (key, params = {}) => {
 export const listenFromBackend = (callback) => {
   // 严格遵循协议 1.1: window.onCSharpResponse(key, params)
   window.onCSharpResponse = (key, params) => {
-    console.log(`[BE -> FE] Received:`, key, params );
+    if(key !== "CAMERA_RESULT") console.log(`[BE -> FE] Received:`, key, params );
     callback(key, params);
   };
 };
