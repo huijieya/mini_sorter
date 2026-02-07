@@ -28,6 +28,11 @@
         background: #333;
         border-radius: 3px;
       }
+      /* 隐藏 Edge/WebView2 默认的密码明文切换按钮，防止与自定义小眼睛重复 */
+      input::-ms-reveal,
+      input::-ms-clear {
+        display: none;
+      }
     </style>
     <script type="importmap">
 {

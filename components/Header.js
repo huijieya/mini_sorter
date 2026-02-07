@@ -23,15 +23,16 @@ export default {
         <AlertCircle :size="16" />
       </button>
       <button 
-        @click="$emit('open-settings')"
+        @click="$emit('open-settings', 'rules')"
         class="w-7 h-7 bg-[#2c2c2c] hover:bg-[#333] rounded-full flex items-center justify-center text-gray-400 border border-white/5 transition-colors"
       >
         <Settings :size="16" />
       </button>
       
-      <!-- 网络状态按钮 -->
+      <!-- 网络状态按钮：点击直接进入网络配置 -->
       <button 
-        :class="['w-7 h-7 bg-[#2c2c2c] hover:bg-[#333] rounded-full flex items-center justify-center border border-white/5 transition-colors', status?.networkConnected ? 'text-[#64C84C]' : 'text-red-500']"
+        @click="$emit('open-settings', 'network')"
+        :class="['w-7 h-7 bg-[#2c2c2c] hover:bg-[#333] rounded-full flex items-center justify-center border border-white/5 transition-colors active:scale-90', status?.networkConnected ? 'text-[#64C84C]' : 'text-red-500']"
       >
         <component :is="status?.networkMode === 2 ? 'Wifi' : 'Link2'" :size="16" />
       </button>

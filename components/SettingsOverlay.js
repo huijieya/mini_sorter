@@ -1,18 +1,19 @@
 
 import { ref, reactive, watch } from 'vue';
-import { ChevronLeft, Globe, Wifi, WifiOff, Lock, Server, Cpu, Check, ShieldCheck, Database, XCircle, Send } from 'lucide-vue-next';
+import { ChevronLeft, Globe, Wifi, WifiOff, Lock, Server, Cpu, Check, ShieldCheck, Database, XCircle, Send, Eye, EyeOff } from 'lucide-vue-next';
 import { callBackend } from '../services/bridge.js';
 
 export default {
   name: 'SettingsOverlay',
-  props: ['wifiList', 'hwStatus', 'sortingRules', 'currentRule'],
+  props: ['wifiList', 'hwStatus', 'sortingRules', 'currentRule', 'initialTab'],
   emits: ['close'],
-  components: { ChevronLeft, Globe, Wifi, WifiOff, Lock, Server, Cpu, Check, ShieldCheck, Database, XCircle, Send },
+  components: { ChevronLeft, Globe, Wifi, WifiOff, Lock, Server, Cpu, Check, ShieldCheck, Database, XCircle, Send, Eye, EyeOff },
   setup(props) {
-    const activeTab = ref('rules');
+    const activeTab = ref(props.initialTab || 'rules');
     const selectedSsid = ref('');
     const wifiPassword = ref('');
     const showWifiModal = ref(false);
+    const showPassword = ref(false);
 
     // 本地选中的规则 waveType，用于点击“应用”前预览
     const localWaveType = ref(props.currentRule?.waveType);
@@ -20,6 +21,11 @@ export default {
     // 当后端更新当前规则时，同步本地状态
     watch(() => props.currentRule?.waveType, (newVal) => {
       localWaveType.value = newVal;
+    });
+
+    // 监听 props 变化以同步 activeTab (当从外部点击不同 icon 切换进入时)
+    watch(() => props.initialTab, (newVal) => {
+      activeTab.value = newVal || 'rules';
     });
 
     const staticIpForm = reactive({
@@ -31,6 +37,7 @@ export default {
     const handleSelectWifi = (ssid) => {
       selectedSsid.value = ssid;
       wifiPassword.value = '';
+      showPassword.value = false;
       showWifiModal.value = true;
     };
 
@@ -60,6 +67,7 @@ export default {
       selectedSsid,
       wifiPassword,
       showWifiModal,
+      showPassword,
       staticIpForm,
       localWaveType,
       handleSelectWifi,
@@ -72,17 +80,8 @@ export default {
   },
   template: `
   <div class="absolute inset-0 z-50 bg-[#0f0f0f] flex flex-col p-8 overflow-hidden animate-in fade-in duration-300">
-    <!-- 头部导航 -->
-    <div class="flex justify-between items-center mb-10">
-      <div class="flex flex-col">
-        <h2 class="text-2xl font-black tracking-tight flex items-center gap-3">
-          <div class="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center text-black">
-            <Cpu :size="20" />
-          </div>
-          System Control Center
-        </h2>
-        <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.4em] ml-11 mt-1 opacity-60">FlexiNode Core V1.0</p>
-      </div>
+    <!-- 头部工具栏 (仅保留右侧状态和返回按钮) -->
+    <div class="flex justify-end items-center mb-6">
       <div class="flex items-center gap-6">
         <div class="flex items-center gap-2 text-cyan-400 bg-cyan-400/5 border border-cyan-400/10 px-4 py-2 rounded-xl">
           <Globe :size="16" />
@@ -251,8 +250,22 @@ export default {
         </div>
         <div class="space-y-2">
           <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">安全密钥</label>
-          <div class="relative">
-            <input v-model="wifiPassword" type="password" class="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3.5 text-sm focus:border-cyan-500/50 focus:outline-none transition-all" placeholder="输入密码" autofocus @keyup.enter="connectWifi" />
+          <div class="relative flex items-center">
+            <input 
+              v-model="wifiPassword" 
+              :type="showPassword ? 'text' : 'password'" 
+              class="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3.5 pr-12 text-sm focus:border-cyan-500/50 focus:outline-none transition-all" 
+              placeholder="输入密码" 
+              autofocus 
+              @keyup.enter="connectWifi" 
+            />
+            <button 
+              type="button"
+              @click="showPassword = !showPassword"
+              class="absolute right-4 text-gray-500 hover:text-cyan-400 transition-colors p-1"
+            >
+              <component :is="showPassword ? 'EyeOff' : 'Eye'" :size="18" />
+            </button>
           </div>
         </div>
         <div class="flex gap-3">

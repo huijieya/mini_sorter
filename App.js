@@ -19,9 +19,10 @@ const App = {
         @power-off="triggerPowerOff" 
       />
 
-      <main class="flex-1 m-2 mt-0 p-2 bg-[#161616] rounded-xl flex flex-col gap-1.5 overflow-hidden border border-white/5 shadow-2xl">
+      <main class="flex-1 m-2 mt-0 p-2 bg-[#161616] rounded-xl flex flex-col gap-1.5 overflow-hidden border border-white/5 shadow-2xl relative">
         <StatusBar :status="hwStatus" />
 
+        <!-- 核心显示区域 -->
         <div class="flex-1 flex gap-2 min-h-0 overflow-hidden">
           <div class="flex flex-col gap-2 w-[30%] h-full">
             <template v-for="wall in leftWalls" :key="wall.id">
@@ -47,6 +48,30 @@ const App = {
             </template>
           </div>
         </div>
+
+        <!-- 首页底部状态图例 (由 absolute 改为流式布局，避免遮挡) -->
+        <div class="mt-1 flex gap-5 px-2 py-1.5 bg-black/20 rounded-lg border border-white/5 shrink-0 self-start">
+          <div class="flex items-center gap-1.5">
+            <div class="w-2.5 h-2.5 rounded-sm bg-[#242424] border border-white/10"></div>
+            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">默认</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-2.5 h-2.5 rounded-sm bg-[#64C84C] shadow-[0_0_5px_rgba(100,200,76,0.5)]"></div>
+            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">打开</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-2.5 h-2.5 rounded-sm bg-[#f88133]"></div>
+            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">投递中</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-2.5 h-2.5 rounded-sm bg-[#ffc634]"></div>
+            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">满筐</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-2.5 h-2.5 rounded-sm bg-[#22D3EE]"></div>
+            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">已完结</span>
+          </div>
+        </div>
       </main>
 
       <!-- 各种覆盖层 -->
@@ -56,6 +81,7 @@ const App = {
         :hw-status="hwStatus"
         :sorting-rules="sortingRules"
         :current-rule="currentRule"
+        :initial-tab="settingsInitialTab"
         @close="showSettings = false" 
       />
       
@@ -89,6 +115,7 @@ const App = {
     return {
       showSettings: false,
       showDev: false,
+      settingsInitialTab: 'rules',
       sortingMode: 'single',
       feedback: { text: '系统就绪', type: 'info' },
       cameraImg: '',
@@ -130,7 +157,8 @@ const App = {
   },
   
   methods: {
-    handleOpenSettings() {
+    handleOpenSettings(tab = 'rules') {
+      this.settingsInitialTab = tab;
       this.showSettings = true;
       callBackend('GET_CURRENT_RULE', {});
     },
