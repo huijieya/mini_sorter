@@ -88,9 +88,9 @@ export default {
     <div class="space-y-1.5 mt-auto">
       <button 
         @click="$emit('dispatch')"
-        :disabled="mode === 'single' || !order.barcode || feedback.type === 'success'"
+        :disabled="mode === 'single' || !order.barcode "
         class="w-full py-2.5 rounded-lg text-lg font-black uppercase tracking-tighter transition-all"
-        :class="(mode === 'single' || !order.barcode || feedback.type === 'success') ? 'bg-gray-800 text-gray-600 opacity-20 cursor-not-allowed' : 'bg-cyan-500 text-black hover:bg-cyan-400 active:scale-[0.98] shadow-lg shadow-cyan-500/20'"
+        :class="(mode === 'single' || !order.barcode ) ? 'bg-gray-800 text-gray-600 opacity-20 cursor-not-allowed' : 'bg-cyan-500 text-black hover:bg-cyan-400 active:scale-[0.98] shadow-lg shadow-cyan-500/20'"
       >
         {{ t('dispatch') }}
       </button>
