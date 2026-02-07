@@ -6,6 +6,7 @@ import ControlPanel from './components/ControlPanel.js';
 import SettingsOverlay from './components/SettingsOverlay.js';
 import ConfirmModal from './components/ConfirmModal.js';
 import { callBackend, listenFromBackend } from './services/bridge.js';
+import { translations } from './services/i18n.js';
 
 const App = {
   name: 'App',
@@ -14,19 +15,21 @@ const App = {
     <div class="h-screen w-screen flex flex-col bg-[#0c0c0c] text-gray-200 overflow-hidden select-none font-sans relative">
       <Header 
         :status="hwStatus"
+        :lang="lang"
         @open-settings="handleOpenSettings" 
         @open-dev="showDev = !showDev" 
         @power-off="triggerPowerOff" 
+        @change-lang="changeLang"
       />
 
       <main class="flex-1 m-2 mt-0 p-2 bg-[#161616] rounded-xl flex flex-col gap-1.5 overflow-hidden border border-white/5 shadow-2xl relative">
-        <StatusBar :status="hwStatus" />
+        <StatusBar :status="hwStatus" :lang="lang" />
 
         <!-- 核心显示区域 -->
         <div class="flex-1 flex gap-2 min-h-0 overflow-hidden">
           <div class="flex flex-col gap-2 w-[30%] h-full">
             <template v-for="wall in leftWalls" :key="wall.id">
-              <WallGrid :wall="wall" @slot-click="handleSlotClick" class="flex-1" />
+              <WallGrid :wall="wall" :lang="lang" @slot-click="handleSlotClick" class="flex-1" />
             </template>
           </div>
 
@@ -36,6 +39,7 @@ const App = {
               :mode="sortingMode" 
               :feedback="feedback"
               :camera-img="cameraImg"
+              :lang="lang"
               @request-mode-toggle="requestModeToggle"
               @update-actual="(val) => order.actual = val"
               @dispatch="handleDispatch"
@@ -44,32 +48,32 @@ const App = {
 
           <div class="flex flex-col gap-2 w-[30%] h-full">
             <template v-for="wall in rightWalls" :key="wall.id">
-              <WallGrid :wall="wall" @slot-click="handleSlotClick" class="flex-1" />
+              <WallGrid :wall="wall" :lang="lang" @slot-click="handleSlotClick" class="flex-1" />
             </template>
           </div>
         </div>
 
-        <!-- 首页底部状态图例 (由 absolute 改为流式布局，避免遮挡) -->
+        <!-- 首页底部状态图例 -->
         <div class="mt-1 flex gap-5 px-2 py-1.5 bg-black/20 rounded-lg border border-white/5 shrink-0 self-start">
           <div class="flex items-center gap-1.5">
             <div class="w-2.5 h-2.5 rounded-sm bg-[#242424] border border-white/10"></div>
-            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">默认</span>
+            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">{{ t('legend_default') }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <div class="w-2.5 h-2.5 rounded-sm bg-[#64C84C] shadow-[0_0_5px_rgba(100,200,76,0.5)]"></div>
-            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">打开</span>
+            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">{{ t('legend_open') }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <div class="w-2.5 h-2.5 rounded-sm bg-[#f88133]"></div>
-            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">投递中</span>
+            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">{{ t('legend_progress') }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <div class="w-2.5 h-2.5 rounded-sm bg-[#ffc634]"></div>
-            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">满筐</span>
+            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">{{ t('legend_full') }}</span>
           </div>
           <div class="flex items-center gap-1.5">
-            <div class="w-2.5 h-2.5 rounded-sm bg-[#22D3EE]"></div>
-            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">已完结</span>
+            <div class="w-2.5 h-2.5 rounded-sm bg-[#22D3EE] text-[#22D3EE]"></div>
+            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">{{ t('legend_finished') }}</span>
           </div>
         </div>
       </main>
@@ -82,6 +86,7 @@ const App = {
         :sorting-rules="sortingRules"
         :current-rule="currentRule"
         :initial-tab="settingsInitialTab"
+        :lang="lang"
         @close="showSettings = false" 
       />
       
@@ -90,22 +95,24 @@ const App = {
         :title="confirmModal.title"
         :content="confirmModal.content"
         :confirm-color="confirmModal.color"
+        :confirm-text="t('confirm')"
+        :cancel-text="t('cancel')"
         @confirm="handleConfirmAction"
         @cancel="confirmModal.show = false"
       />
 
       <!-- 开发模拟器 -->
       <div v-if="showDev" class="absolute bottom-16 right-4 z-[60] bg-[#222] border border-cyan-500/50 p-4 rounded-xl shadow-2xl w-80 text-[10px] space-y-2">
-        <h3 class="text-cyan-400 font-bold border-b border-white/10 pb-1 mb-2">协议模拟器 (BE to FE)</h3>
+        <h3 class="text-cyan-400 font-bold border-b border-white/10 pb-1 mb-2">Protocol Simulator</h3>
         <div class="grid grid-cols-2 gap-2">
-          <button @click="simulate('INIT_CONFIG_2')" class="bg-blue-900 p-1 rounded">模拟2面墙初始化</button>
-          <button @click="simulate('INIT_CONFIG_4')" class="bg-indigo-900 p-1 rounded">模拟4面墙初始化</button>
-          <button @click="simulate('SCAN_RESULT')" class="bg-cyan-900 p-1 rounded">模拟扫码成功</button>
-          <button @click="simulate('SITE_UPDATE')" class="bg-orange-900 p-1 rounded">模拟料框更新</button>
-          <button @click="simulate('CAMERA_RESULT')" class="bg-pink-900 p-1 rounded">模拟相机画面</button>
-          <button @click="simulate('WIFI_NETWORK')" class="bg-amber-900 p-1 rounded">模拟WIFI列表</button>
-          <button @click="simulate('SORTING_MODE')" class="bg-emerald-900 p-1 rounded">模拟分拣规则列表</button>
-          <button @click="simulate('NET_TOGGLE')" class="bg-purple-900 p-1 rounded">模拟网络切换</button>
+          <button @click="simulate('INIT_CONFIG_2')" class="bg-blue-900 p-1 rounded">2-Wall Init</button>
+          <button @click="simulate('INIT_CONFIG_4')" class="bg-indigo-900 p-1 rounded">4-Wall Init</button>
+          <button @click="simulate('SCAN_RESULT')" class="bg-cyan-900 p-1 rounded">Scan Success</button>
+          <button @click="simulate('SITE_UPDATE')" class="bg-orange-900 p-1 rounded">Site Update</button>
+          <button @click="simulate('CAMERA_RESULT')" class="bg-pink-900 p-1 rounded">Camera Frame</button>
+          <button @click="simulate('WIFI_NETWORK')" class="bg-amber-900 p-1 rounded">WiFi List</button>
+          <button @click="simulate('SORTING_MODE')" class="bg-emerald-900 p-1 rounded">Rule List</button>
+          <button @click="simulate('NET_TOGGLE')" class="bg-purple-900 p-1 rounded">Net Toggle</button>
         </div>
       </div>
     </div>
@@ -113,11 +120,12 @@ const App = {
   
   data() {
     return {
+      lang: localStorage.getItem('app_lang') || 'zh',
       showSettings: false,
       showDev: false,
       settingsInitialTab: 'rules',
       sortingMode: 'single',
-      feedback: { text: '系统就绪', type: 'info' },
+      feedback: { text: '', type: 'info' },
       cameraImg: '',
       hwStatus: { 
         cameraConnected: true, 
@@ -157,6 +165,29 @@ const App = {
   },
   
   methods: {
+    t(key) {
+      return translations[this.lang]?.[key] || key;
+    },
+    changeLang(newLang) {
+      this.lang = newLang;
+      localStorage.setItem('app_lang', newLang);
+
+      // 通知后端语言切换
+      const langMap = {
+        'zh': 'zh-CN',
+        'en': 'en-US',
+        'ja': 'ja-JP',
+        'ko': 'ko-KR'
+      };
+      callBackend('SET_LANGUAGE', { language: langMap[newLang] });
+
+      // 更新初始化的文字反馈
+      if (this.feedback.text === translations['zh'].feedback_ready || this.feedback.text === '系统就绪') {
+        this.feedback.text = this.t('feedback_ready');
+      } else if (this.feedback.text === translations['zh'].feedback_scan || this.feedback.text === '请扫码') {
+        this.feedback.text = this.t('feedback_scan');
+      }
+    },
     handleOpenSettings(tab = 'rules') {
       this.settingsInitialTab = tab;
       this.showSettings = true;
@@ -167,20 +198,19 @@ const App = {
       this.confirmModal.type = 'mode';
       this.confirmModal.pendingMode = newMode;
       if (newMode === 'multi') {
-        this.confirmModal.title = '切换至<span class="text-cyan-400">多件模式</span>需要手动发车';
-        this.confirmModal.content = '请确认';
+        this.confirmModal.title = this.t('mode_switch_multi_title');
       } else {
-        this.confirmModal.title = '切换至<span class="text-cyan-400">单件模式</span>将触发自动发车';
-        this.confirmModal.content = '请确认商品已准备就位';
+        this.confirmModal.title = this.t('mode_switch_single_title');
       }
+      this.confirmModal.content = this.t('mode_switch_content');
       this.confirmModal.color = 'bg-cyan-500';
       this.confirmModal.show = true;
     },
 
     triggerPowerOff() {
       this.confirmModal.type = 'power';
-      this.confirmModal.title = '确认要<span class="text-red-500">关机</span>吗？';
-      this.confirmModal.content = '这将控制全部设备物理关机并退出系统。';
+      this.confirmModal.title = this.t('power_off_title');
+      this.confirmModal.content = this.t('power_off_content');
       this.confirmModal.color = 'bg-red-500';
       this.confirmModal.show = true;
     },
@@ -241,13 +271,14 @@ const App = {
           }
           break;
         case 'COMMON_RESULT':
-          this.feedback = { text: params.message || '操作成功', type: params.message?.includes('失败') ? 'error' : 'success' };
+          const isFail = params.message?.includes('失败') || params.message?.toLowerCase().includes('fail');
+          this.feedback = { text: isFail ? this.t('feedback_fail') : this.t('feedback_success'), type: isFail ? 'error' : 'success' };
           break;
         case 'DEPARTURE_SUCCESS':
-          this.feedback = { text: '下发成功', type: 'success' };
+          this.feedback = { text: this.t('feedback_dispatch_success'), type: 'success' };
           setTimeout(() => {
-            this.order = { orderId: '', barcode: '', name: '请扫码', required: 0, actual: 0 };
-            this.feedback = { text: '请扫码', type: 'info' };
+            this.order = { orderId: '', barcode: '', name: this.t('feedback_scan'), required: 0, actual: 0 };
+            this.feedback = { text: this.t('feedback_scan'), type: 'info' };
           }, 2000);
           break;
       }
@@ -274,9 +305,9 @@ const App = {
         return;
       }
       const mockData = {
-        'INIT_CONFIG_2': { key: 'INIT_CONFIG', params: { walls: [{ id: "0", name: "Wall_Left", online: true, slots: generateSlots('wall1') }, { id: "1", name: "Wall_Right", online: true, slots: generateSlots('wall2') }], order: { orderId: 'MOCK-001', barcode: 'SN123', name: '待分拣物料', required: 2, actual: 0 } } },
-        'INIT_CONFIG_4': { key: 'INIT_CONFIG', params: { walls: [{ id: "0", name: "Wall1", online: true, slots: generateSlots('wall1') }, { id: "1", name: "Wall2", online: true, slots: generateSlots('wall2') }, { id: "2", name: "Wall3", online: true, slots: generateSlots('wall3') }, { id: "3", name: "Wall4", online: true, slots: generateSlots('wall4') }], order: { orderId: 'MOCK-004', barcode: 'SN444', name: '四墙测试', required: 10, actual: 0 } } },
-        'SCAN_RESULT': { key: 'SCAN_RESULT', params: { order: { orderId: 'MOCK-SCAN', barcode: 'SCAN123456', name: '模拟扫码物料', required: 5, actual: 1 }, target: { slotId: 'wall1_1_1' } } },
+        'INIT_CONFIG_2': { key: 'INIT_CONFIG', params: { walls: [{ id: "0", name: "Wall_Left", online: true, slots: generateSlots('wall1') }, { id: "1", name: "Wall_Right", online: true, slots: generateSlots('wall2') }], order: { orderId: 'MOCK-001', barcode: 'SN123', name: 'Mock Product A', required: 2, actual: 0 } } },
+        'INIT_CONFIG_4': { key: 'INIT_CONFIG', params: { walls: [{ id: "0", name: "Wall1", online: true, slots: generateSlots('wall1') }, { id: "1", name: "Wall2", online: true, slots: generateSlots('wall2') }, { id: "2", name: "Wall3", online: true, slots: generateSlots('wall3') }, { id: "3", name: "Wall4", online: true, slots: generateSlots('wall4') }], order: { orderId: 'MOCK-004', barcode: 'SN444', name: '4-Wall Mock Product', required: 10, actual: 0 } } },
+        'SCAN_RESULT': { key: 'SCAN_RESULT', params: { order: { orderId: 'MOCK-SCAN', barcode: 'SCAN123456', name: 'Scanned Item', required: 5, actual: 1 }, target: { slotId: 'wall1_1_1' } } },
         'SITE_UPDATE': { key: 'SITE_UPDATE', params: [{ id: 'wall1_1_1', count: 2, status: 'IN-PROGRESS' }] },
         'CAMERA_RESULT': { key: 'CAMERA_RESULT', params: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' },
         'WIFI_NETWORK': { key: 'WIFI_NETWORK', params: [{ ssid: "HYPERLEAP-5G", signalStrength: 90 }, { ssid: "Office-Guest", signalStrength: 65 }, { ssid: "StarLink", signalStrength: 40 }] },
@@ -284,6 +315,9 @@ const App = {
       };
       if (mockData[key]) this.processBackendMessage(mockData[key].key, mockData[key].params);
     }
+  },
+  created() {
+    this.feedback.text = this.t('feedback_ready');
   },
   mounted() {
     listenFromBackend(this.processBackendMessage);
